@@ -1,0 +1,109 @@
+const fileInput = document.querySelector("#upload");
+
+// enabling drawing on the blank canvas
+drawOnImage();
+
+fileInput.addEventListener("change", async (e) => {
+    const [file] = fileInput.files;
+
+    // displaying the uploaded image
+    const image = document.createElement("img");
+    image.src = await fileToDataUri(file);
+
+    // enbaling the brush after after the image
+    // has been uploaded
+    image.addEventListener("load", () => {
+        drawOnImage(image);
+    });
+
+    return false;
+});
+
+function fileToDataUri(field) {
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+
+        reader.addEventListener("load", () => {
+            resolve(reader.result);
+        });
+
+        reader.readAsDataURL(field);
+    });
+}
+
+const sizeElement = document.querySelector("#sizeRange");
+let size = sizeElement.value;
+sizeElement.oninput = (e) => {
+    size = e.target.value;
+};
+
+const colorElement = document.getElementsByName("colorRadio");
+let color;
+colorElement.forEach((c) => {
+    if (c.checked) color = c.value;
+});
+
+colorElement.forEach((c) => {
+    c.onclick = () => {
+        color = c.value;
+    };
+});
+
+
+function drawOnImage(image = null) {
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    let score = 0;
+    // if an image is present,
+    // the image passed as a parameter is drawn in the canvas
+    if (image) {
+        const imageWidth = image.width;
+        const imageHeight = image.height;
+
+        // rescaling the canvas element
+        canvas.width = imageWidth;
+        canvas.height = imageHeight;
+
+        ctx.drawImage(image, 0, 0, imageWidth, imageHeight);
+    }
+    ctx.font = '38px serif';
+    ctx.fillText('Điểm:', 600, 50);
+    ctx.fillStyle = "red";
+    ctx.fillText(score, 700, 50);
+    const clearElement = document.getElementById("clear");
+    clearElement.onclick = () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    };
+
+    let isDrawing;
+
+    canvas.onmousedown = (e) => {
+        isDrawing = true;
+        ctx.beginPath();
+        ctx.lineWidth = size;
+        ctx.strokeStyle = color;
+        ctx.lineJoin = "round";
+        ctx.lineCap = "round";
+        // ctx.moveTo(e.clientX, e.clientY);
+    };
+
+    canvas.onmousemove = (e) => {
+        if (isDrawing) {
+            ctx.lineTo(e.clientX, e.clientY);
+            ctx.stroke();
+        }
+    };
+
+    canvas.onmouseup = function () {
+        writeScore(ctx,score,true) //clear score
+        score++;
+        writeScore(ctx, score);
+        isDrawing = false;
+        ctx.closePath();
+    };
+}
+
+const writeScore = (ctx, score = 0, isClear = false) => {
+    ctx.fillStyle = isClear ? 'white' : 'red';
+    ctx.fillText(score, 700, 50);
+}

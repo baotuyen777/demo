@@ -1,0 +1,57 @@
+main {
+    padding: 10px;
+    background: #efbfc778;
+    max-width: 1366px;
+    margin: 10px auto;
+}
+
+main:after {
+    clear: both;
+    content: "";
+    display: table;
+}
+
+section {
+    float: left;
+    width: 75%;
+
+}
+
+aside {
+    float: left;
+    width: 20%;
+    height: 500px;
+    overflow: auto;
+}
+
+#showMarkScore {
+    position: absolute;
+    color: red;
+    font-weight: bold;
+}
+#history li {
+    margin: 10px;
+    background: #0000ff0f;
+    padding: 5px;
+    list-style: none;
+    position: relative;
+}
+#history li .del{
+    position: absolute;
+    right: 10px;
+    color: red;
+}
+#highlight{
+    background: rgba(255, 255, 0, 0.48);
+    height: 50px;
+    width: 50px;
+    border-radius: 50%;
+    position: absolute;
+}
+#wrap_canvas{
+    position: relative;
+}
+canvas{
+    /*width: 100%;*/
+    overflow: auto;
+}
