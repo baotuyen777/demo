@@ -10,18 +10,21 @@ canvas.onclick = function (e) {
 
 //Function to dynamically add an input box:
 function addInput(x, y) {
-    var input = document.createElement('input');
-    input.type = 'text';
-    input.style.position = 'fixed';
+    var input = document.createElement('textarea');
+    input.setAttribute('id','ex-note-input');
+    input.style.position = 'absolute';
     input.style.left = (x) + 'px';
     input.style.top = (y) + 'px';
 
     input.onkeydown = function (e) {
-        e.key === 'Enter' && renderComment(this)
+        if (e.key === 'Enter' && e.altKey) {
+            input.value = input.value + "\n";
+            return;
+        }
+        e.key === 'Enter' && renderComment(this);
     };
 
-    input.onblur = function() {
-        console.log(2323)
+    input.onblur = function () {
         renderComment(this)
     }
 
@@ -39,14 +42,21 @@ function renderComment(e) {
 
 //Draw the text onto canvas:
 function drawText(txt, x, y) {
-    ctx.globalAlpha = 0.5;
-    ctx.fillStyle = 'gray';
-    const width = ctx.measureText(txt).width;
-
-    ctx.fillRect(x - 5, y - 5, width + 10, 25);
+    if (!txt) {
+        return;
+    }
+    let lines = txt.split('\n');
+    let lineHeight = 25;
+    ctx.globalAlpha = 0.2;
+    ctx.fillStyle = 'blue';
+    const width=ctx.measureText(txt).width;
+    ctx.fillRect(x - 5, y - 5, width , 25 + ((lines.length - 1) * lineHeight));
     ctx.globalAlpha = 1;
 
     ctx.font = '16px sans-serif';
     ctx.fillStyle = 'blue';
-    ctx.fillText(txt, x, y+15);
+
+    for (let j = 0; j < lines.length; j++) {
+        ctx.fillText(lines[j], x, y + 15 + (j * lineHeight));
+    }
 }

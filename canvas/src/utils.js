@@ -11,7 +11,8 @@ let paths = [];
 let point = {};
 var scores = 0, score = 0;
 var mouse = { x: 0, y: 0 };
-var previous = { x: 0, y: 0 };
+// var previous = { x: 0, y: 0 };
+
 const sizeElement = document.querySelector("#sizeRange");
 let size = sizeElement.value;
 sizeElement.oninput = (e) => {
@@ -24,8 +25,8 @@ const firstImg = new Image();
 firstImg.src = imgs[0];
 var canvasHeight = 0;
 
-firstImg.onload = function () {
-    init();
+firstImg.onload = async function () {
+    await init();
 }
 
 let hasScore = false;
@@ -46,7 +47,7 @@ function markScore() {
 canvas.addEventListener('mousedown', function (e) {
     drawing = true;
     ctx.strokeStyle = color;
-    previous = { x: mouse.x, y: mouse.y };
+    // previous = { x: mouse.x, y: mouse.y };
     mouse = oMousePos(canvas, e);
     point = { fromX: mouse.x, fromY: mouse.y }
     firstX = mouse.x;
@@ -55,19 +56,17 @@ canvas.addEventListener('mousedown', function (e) {
 
 canvas.addEventListener('mousemove', function (e) {
     if (drawing) {
-        previous = { x: e.layerX, y: mouse.y };
+        coordinateScore = { x: e.layerX, y: mouse.y };
         if (!hasScore) {
-            coordinateScore = previous;
             mode === 'mark' && markScore()
         } else {
-            score = (Math.round((mouse.x - firstX) / 50 * 4) / 4).toFixed(2)
+            score=calculateScore();
             document.getElementById('showMarkScore').innerText = score;
         }
         mouse = oMousePos(canvas, e);
 // drawing a line from the previous point to the current point
         ctx.beginPath();
         ctx.lineWidth = size;
-        // ctx.strokeStyle = color;
         ctx.moveTo(firstX, firstY);
         ctx.lineTo(mouse.x, firstY);
         ctx.stroke();
@@ -78,27 +77,32 @@ canvas.addEventListener('mousemove', function (e) {
 canvas.addEventListener('mouseup', function () {
     drawing = false;
     hasScore = false;
-    if (score < 0.01) {
-        document.getElementById('showMarkScore').innerText = ''
-        renderPaths();
+    score=calculateScore();
+    if ( score < 0.01) {
+        document.getElementById('showMarkScore').innerText = '';
         return;
     }
 // Adding the path to the array or the paths
-    point = { ...point, toX: mouse.x, toY: firstY, score, color,size };
+    point = { ...point, toX: mouse.x, toY: firstY, score, color, size,mode };
     paths.push(point);
-    drawText(document.getElementById('showMarkScore').innerHTML, coordinateScore.x + 10, coordinateScore.y - 25);
+    drawText(document.getElementById('showMarkScore').innerHTML, firstX + 10, firstY - 25);
     document.getElementById('showMarkScore').innerText = ''
     renderHistory(coordinateScore.x, coordinateScore.y);
     renderTotalScores();
+    // score =0;
 }, false);
 
-function Undo() {
+const calculateScore=()=>{
+    return (Math.round((mouse.x - firstX) / 50 * 4) / 4).toFixed(2)
+}
+
+const Undo = async () => {
+    await init();
     paths.splice(-1, 1);// remove the last path from the paths array
     renderPaths();// draw all the paths in the paths array
     highlight && highlight.remove();
     renderTotalScores()
 }
-
 
 // a function to detect the mouse position
 function oMousePos(canvas, evt) {
@@ -109,13 +113,7 @@ function oMousePos(canvas, evt) {
     }
 }
 
-const writeScore = (ctx, score = 0, isClear = false) => {
-    ctx.fillStyle = 'red';
-    ctx.font = '38px serif';
-    isClear && ctx.fillText('Điểm:', 650, 30);
-    ctx.fillStyle = isClear ? 'white' : 'red';
-    ctx.fillText(score, 750, 30);
-}
+
 
 document.querySelector("#clear").onclick = () => {
     scores = 0;
@@ -124,17 +122,17 @@ document.querySelector("#clear").onclick = () => {
     init()
     renderHistory();
 };
+let b = false
 
 function init() {
-    ctx.fillStyle = "white";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
     let img = new Image();
     imgs.forEach(url => {
         img.src = url;
         canvasHeight += img.height;
     })
     canvas.height = canvasHeight;
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     let currentHeight = 0;
     let arr = [];
@@ -149,50 +147,44 @@ function init() {
         }
     )
 
-    Promise.all(arr).then(value => {
+    return Promise.all(arr).then(value => {
         value.forEach((img) => {
             ctx.drawImage(img, 0, currentHeight);
             currentHeight = img.height;
         })
+        highlight && highlight.remove();
+        return value;
     })
-
-    highlight && highlight.remove();
 }
 
 const renderHistory = () => {
     document.getElementById('history').innerHTML = '';
     paths.forEach(path => {
         let li = document.createElement('li');
-        li.innerHTML = `${path.score} <span class="del">Xóa</span>`;
+        li.innerHTML = `${path.mode==='mark' ? path.score : "Chữa bài"} <span class="del">Xóa</span>`;
         li.onclick = function () {
             let highlight = document.createElement('div')
             highlight.setAttribute('id', 'highlight')
             highlight.setAttribute('style', `top:${path.fromY - 40}px; left:${path.fromX}px`);
-            setTimeout(() => document.getElementById('wrap_canvas').appendChild(highlight), 10)
+            setTimeout(() => document.getElementById('wrap_canvas').appendChild(highlight), 10);
+            path.fromY>700 && window.scrollTo({top: path.fromY, behavior: 'smooth'});
         }
         document.getElementById('history').appendChild(li);
     })
 }
 
 const renderPaths = () => {
-    // const promise = new Promise((resolve, reject) => {
-    init();
+    // await init();
     renderHistory();
-    // }).then(data=>data);
-    // Promise.all([promise]).then((values) => {
-    setTimeout(() => {
-        paths.forEach(path => {
-            ctx.beginPath();
-            ctx.strokeStyle=path.color;
-            ctx.lineWidth=path.size;
-            ctx.moveTo(path.fromX, path.fromY);
-            ctx.lineTo(path.toX, path.toY);
-            ctx.stroke();
-            drawText(path.score, path.fromX + 10, path.fromY - 25);
-        })
-    }, 50)
-
-    // })
+    paths.forEach(path => {
+        ctx.beginPath();
+        ctx.strokeStyle = path.color;
+        ctx.lineWidth = path.size;
+        ctx.moveTo(path.fromX, path.fromY);
+        ctx.lineTo(path.toX, path.toY);
+        ctx.stroke();
+        drawText(path.score, path.fromX + 10, path.fromY - 25);
+    })
 
 }
 
@@ -202,17 +194,21 @@ document.getElementById('history').onclick = function () {
 
 const shortcuts = (e) => {
     e.ctrlKey && e.key === 'z' && Undo();
+    e.key==='Escape' && document.getElementById('ex-note-input') && document.getElementById('ex-note-input').remove();
 }
 document.addEventListener('keyup', shortcuts, false);
 
 const renderTotalScores = () => {
     if (mode === 'mark' && mouse.x - firstX && mouse.x - firstX > 0) {
-        writeScore(ctx, scores, true) //clear score
         scores = 0;
         paths.forEach(path => {
             scores = parseFloat(path.score) + parseFloat(scores);
         });
-        writeScore(ctx, scores);
+        ctx.fillStyle = "white";
+        ctx.fillRect(650, 20, 200, 40);
+        ctx.fillStyle = 'red';
+        ctx.font = '38px serif';
+        ctx.fillText('Điểm:', 650, 50);
+        ctx.fillText(scores, 750, 50);
     }
-
 }
