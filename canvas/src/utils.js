@@ -1,3 +1,5 @@
+const f = require('fs')
+
 const canvas = document.getElementById('canvas');
 // canvas.height=1200;
 const ctx = canvas.getContext('2d');
@@ -20,7 +22,7 @@ sizeElement.oninput = (e) => {
 };
 
 ctx.lineWidth = size;
-let imgs = ['img/cauhoi1.png', 'img/cauhoi2.png'];
+let imgs = ['https://hls.smartlms.vn/media/2021/12/20/4c/618e2cd691529347a323b14c/61c052c81a66cd659f0c3083.png', 'img/cauhoi2.png'];
 const firstImg = new Image();
 firstImg.src = imgs[0];
 var canvasHeight = 0;
@@ -60,7 +62,7 @@ canvas.addEventListener('mousemove', function (e) {
         if (!hasScore) {
             mode === 'mark' && markScore()
         } else {
-            score=calculateScore();
+            score = calculateScore();
             document.getElementById('showMarkScore').innerText = score;
         }
         mouse = oMousePos(canvas, e);
@@ -77,13 +79,13 @@ canvas.addEventListener('mousemove', function (e) {
 canvas.addEventListener('mouseup', function () {
     drawing = false;
     hasScore = false;
-    score=calculateScore();
-    if ( score < 0.01) {
+    score = calculateScore();
+    if (score < 0.01) {
         document.getElementById('showMarkScore').innerText = '';
         return;
     }
 // Adding the path to the array or the paths
-    point = { ...point, toX: mouse.x, toY: firstY, score, color, size,mode };
+    point = { ...point, toX: mouse.x, toY: firstY, score, color, size, mode };
     paths.push(point);
     drawText(document.getElementById('showMarkScore').innerHTML, firstX + 10, firstY - 25);
     document.getElementById('showMarkScore').innerText = ''
@@ -92,7 +94,7 @@ canvas.addEventListener('mouseup', function () {
     // score =0;
 }, false);
 
-const calculateScore=()=>{
+const calculateScore = () => {
     return (Math.round((mouse.x - firstX) / 50 * 4) / 4).toFixed(2)
 }
 
@@ -113,14 +115,28 @@ function oMousePos(canvas, evt) {
     }
 }
 
-
-
 document.querySelector("#clear").onclick = () => {
     scores = 0;
     paths = [];
     // setTimeout(init(),500)
     init()
     renderHistory();
+};
+
+document.querySelector("#save").onclick = () => {
+
+    const out = f.createWriteStream(__dirname + '/text.png')
+    const stream = canvas.pngStream();
+    stream.on('data', function (chunk) {
+        out.write(chunk);
+    });
+    stream.on('end', function () {
+        console.log('PNG Saved successfully!');
+    });
+    ///---------------
+    // const image= canvas.toDataURL("image/png");
+    // document.write('<img src="'+image+'"/>');
+    // console.log(image,99)
 };
 let b = false
 
@@ -161,13 +177,13 @@ const renderHistory = () => {
     document.getElementById('history').innerHTML = '';
     paths.forEach(path => {
         let li = document.createElement('li');
-        li.innerHTML = `${path.mode==='mark' ? path.score : "Chữa bài"} <span class="del">Xóa</span>`;
+        li.innerHTML = `${path.mode === 'mark' ? path.score : "Chữa bài"} <span class="del">Xóa</span>`;
         li.onclick = function () {
             let highlight = document.createElement('div')
             highlight.setAttribute('id', 'highlight')
             highlight.setAttribute('style', `top:${path.fromY - 40}px; left:${path.fromX}px`);
             setTimeout(() => document.getElementById('wrap_canvas').appendChild(highlight), 10);
-            path.fromY>700 && window.scrollTo({top: path.fromY, behavior: 'smooth'});
+            path.fromY > 700 && window.scrollTo({ top: path.fromY, behavior: 'smooth' });
         }
         document.getElementById('history').appendChild(li);
     })
@@ -194,7 +210,7 @@ document.getElementById('history').onclick = function () {
 
 const shortcuts = (e) => {
     e.ctrlKey && e.key === 'z' && Undo();
-    e.key==='Escape' && document.getElementById('ex-note-input') && document.getElementById('ex-note-input').remove();
+    e.key === 'Escape' && document.getElementById('ex-note-input') && document.getElementById('ex-note-input').remove();
 }
 document.addEventListener('keyup', shortcuts, false);
 

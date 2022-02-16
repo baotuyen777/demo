@@ -1,0 +1,55 @@
+<html>
+<body>
+<!--<img src="https://hls.smartlms.vn/media/2021/12/20/4c/618e2cd691529347a323b14c/61c052c81a66cd659f0c3083.png"/>-->
+<!--<img src="https://i.stack.imgur.com/Y6oFy.jpg"/>-->
+<script>
+    // function imageReceived() {
+    //     let canvas = document.createElement("canvas");
+    //     let context = canvas.getContext("2d");
+    //
+    //     canvas.width = downloadedImg.width;
+    //     canvas.height = downloadedImg.height;
+    //
+    //     context.drawImage(downloadedImg, 0, 0);
+    //     document.body.appendChild(canvas);
+    //
+    //     try {
+    //         let imageURL= canvas.toDataURL("image/png")
+    //         // localStorage.setItem("saved-image-example",imageURL);
+    //
+    //         document.write('<img src="'+imageURL+'">');
+    //     }
+    //     catch(err) {
+    //         console.log("Error: " + err);
+    //     }
+    // }
+    function startDownload() {
+        let imageURL = "https://hls.smartlms.vn/media/2021/12/20/4c/618e2cd691529347a323b14c/61c052c81a66cd659f0c3083.png";
+
+        downloadedImg = new Image;
+        downloadedImg.crossOrigin = "Anonymous";
+        downloadedImg.src = imageURL;
+        downloadedImg.addEventListener("load", ()=>{
+            let canvas = document.createElement("canvas");
+            let context = canvas.getContext("2d");
+
+            canvas.width = downloadedImg.width;
+            canvas.height = downloadedImg.height;
+
+            context.drawImage(downloadedImg, 0, 0);
+            document.body.appendChild(canvas);
+
+            try {
+                let imageURL= canvas.toDataURL("image/png")
+                document.write('<img src="'+imageURL+'">');
+            }
+            catch(err) {
+                console.log("Error: " + err);
+            }
+        });
+    }
+    startDownload()
+    // console.log(getBase64FromImageUrl('https://i.stack.imgur.com/Y6oFy.jpg'))
+</script>
+</body>
+</html>

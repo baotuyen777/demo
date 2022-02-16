@@ -12,7 +12,7 @@ canvas.onclick = function (e) {
 function addInput(x, y) {
     var input = document.createElement('textarea');
     input.setAttribute('id','ex-note-input');
-    input.style.position = 'absolute';
+    input.style.position = 'fixed';
     input.style.left = (x) + 'px';
     input.style.top = (y) + 'px';
 
@@ -48,14 +48,12 @@ function drawText(txt, x, y) {
     let lines = txt.split('\n');
     let lineHeight = 25;
     ctx.globalAlpha = 0.2;
-    ctx.fillStyle = 'blue';
+    ctx.fillStyle = color;
     const width=ctx.measureText(txt).width;
-    ctx.fillRect(x - 5, y - 5, width , 25 + ((lines.length - 1) * lineHeight));
+    ctx.fillRect(x - 5, y - 5, width + 10, 25 + ((lines.length - 1) * lineHeight));
     ctx.globalAlpha = 1;
 
     ctx.font = '16px sans-serif';
-    ctx.fillStyle = 'blue';
-
     for (let j = 0; j < lines.length; j++) {
         ctx.fillText(lines[j], x, y + 15 + (j * lineHeight));
     }
