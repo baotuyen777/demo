@@ -24,6 +24,7 @@ $transformHTMLPlugin = new Phpdocx\Transform\TransformDocAdvHTMLDefaultPlugin();
 
 $transform = new Phpdocx\Transform\TransformDocAdvHTML('../../files/math.docx');
 $html = $transform->transform($transformHTMLPlugin);
+
 echo $html;
 foreach ($blocks as $block) {
 //    var_dump(substr($block, 0, 100));

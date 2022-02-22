@@ -2051,6 +2051,10 @@ class TransformDocAdvHTML
     protected function transformW_FLDCHAR($childNode, $nodeClass)
     {
         if ($childNode->hasAttribute('w:fldCharType') && $childNode->getAttribute('w:fldCharType') == 'end') {
+            if(!$this->complexField){
+                $this->complexField;
+                return;
+            }
             if ($this->complexField['type'] == 'FORMCHECKBOX') {
                 $this->complexField = null;
             }
