@@ -84,7 +84,7 @@ $docx->createDocx('example_transformDocAdvHTML_6.docx');
 
 $transformHTMLPlugin = new Phpdocx\Transform\TransformDocAdvHTMLDefaultPlugin();
 
-$transform = new Phpdocx\Transform\TransformDocAdvHTML('example_transformDocAdvHTML_6.docx');
+$transform = new Phpdocx\Transform\TransformDocAdvHTMLChild('example_transformDocAdvHTML_6.docx');
 $html = $transform->transform($transformHTMLPlugin);
 
 echo $html;

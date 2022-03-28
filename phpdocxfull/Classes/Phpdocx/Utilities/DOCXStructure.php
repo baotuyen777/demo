@@ -137,7 +137,6 @@ class DOCXStructure
     public function parseDocx($path)
     {
         $zip = new \ZipArchive();
-
         if ($zip->open($path) === TRUE) {
             for ($i = 0; $i < $zip->numFiles; $i++) {
                 $fileName = $zip->getNameIndex($i);

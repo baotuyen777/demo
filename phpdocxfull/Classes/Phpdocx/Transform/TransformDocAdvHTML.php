@@ -1,4 +1,5 @@
 <?php
+
 namespace Phpdocx\Transform;
 
 use Phpdocx\Utilities\DOCXStructure;
@@ -235,7 +236,7 @@ class TransformDocAdvHTML
             $this->html = '';
         }
         $this->html = '';
-        
+
         $footersContents = $this->docxStructure->getContentByType('footers');
         $this->target = 'footers';
         foreach ($footersContents as $footerContent) {
@@ -313,7 +314,8 @@ class TransformDocAdvHTML
         // Add a placeholder string to add header contents if exist
         $this->currentSectionClassName = $this->htmlPlugin->generateClassName();
         if ($this->htmlPlugin->getGenerateSectionTags()) {
-            $this->html = '<' . $this->htmlPlugin->getTag('section') . ' class="' . $this->currentSectionClassName . ' ' . ($this->htmlPlugin->getExtraClass('section')==null?'':$this->htmlPlugin->getExtraClass('section')) . '">__HEADERCONTENTSECTION__';
+            // we don't need section tag
+//            $this->html = '<' . $this->htmlPlugin->getTag('section') . ' class="' . $this->currentSectionClassName . ' ' . ($this->htmlPlugin->getExtraClass('section')==null?'':$this->htmlPlugin->getExtraClass('section')) . '">__HEADERCONTENTSECTION__';
         }
 
         $this->target = 'document';
@@ -378,7 +380,8 @@ class TransformDocAdvHTML
             if (isset($options['javaScriptAtTop']) && $options['javaScriptAtTop'] == true) {
                 $output = $this->htmlPlugin->getBaseHTML() . '<head>' . $this->htmlPlugin->getBaseMeta() . $metaValues . $this->htmlPlugin->getBaseCSS() . $this->htmlPlugin->getBaseJavaScript() . $this->javascript . '<style>' . $cssContent . '</style></head><body>' . $documentContent . $endnotesContent . $footnotesContent . $commentsContent . '</body></html>';
             } else {
-                $output = $this->htmlPlugin->getBaseHTML() . '<head>' . $this->htmlPlugin->getBaseMeta() . $metaValues . $this->htmlPlugin->getBaseCSS() . '<style>' . $cssContent . '</style></head><body>' . $documentContent . $endnotesContent . $footnotesContent . $commentsContent . $this->htmlPlugin->getBaseJavaScript() . $this->javascript . '</body></html>';
+//                $output = $this->htmlPlugin->getBaseHTML() . '<head>' . $this->htmlPlugin->getBaseMeta() . $metaValues . $this->htmlPlugin->getBaseCSS() . '<style>' . $cssContent . '</style></head><body>' . $documentContent . $endnotesContent . $footnotesContent . $commentsContent . $this->htmlPlugin->getBaseJavaScript() . $this->javascript . '</body></html>';
+                $output = $documentContent;
             }
         }
 
@@ -388,14 +391,14 @@ class TransformDocAdvHTML
     /**
      * Iterate the contents and transform them
      *
-     * @param 
+     * @param
      * @param array $options
      *  Values:
      *    'javaScriptAtTop' => default as false. If true add JS in the head tag.
      *    'returnHTMLStructure' => default as false. If true return each element of the HTML using an array: comments, document, footnotes, endnotes, headers, footers, metas.
      * @return string
      */
-    public function transformXml($xml)
+    public function transformXml($xml, $onlyTransformText = false)
     {
         foreach ($xml->childNodes as $childNode) {
             $nodeClass = $this->htmlPlugin->generateClassName();
@@ -407,11 +410,12 @@ class TransformDocAdvHTML
                 case 'w:p':
                     $this->transformW_P($childNode, $nodeClass);
                     break;
-                case 'w:sectPr':
-                    if ($this->htmlPlugin->getGenerateSectionTags()) {
-                        $this->transformW_SECTPR($childNode, $nodeClass);
-                    }
-                    break;
+                // we don't need section tag
+//                case 'w:sectPr':
+//                    if ($this->htmlPlugin->getGenerateSectionTags()) {
+//                        $this->transformW_SECTPR($childNode, $nodeClass);
+//                    }
+//                    break;
                 case 'w:sdt':
                     $this->transformW_SDT($childNode, $nodeClass);
                     break;
@@ -507,8 +511,8 @@ class TransformDocAdvHTML
                     $imageString = $this->docxStructure->getContent('word/' . $target);
 
                     $fileInfo = pathinfo($target);
-                    file_put_contents($this->htmlPlugin->getOutputFilesPath(). $fileInfo['basename'], $imageString);
-                    $styles .= 'body {background-image: url("' . $this->htmlPlugin->getOutputFilesPath(). $fileInfo['basename'] . '");}';
+                    file_put_contents($this->htmlPlugin->getOutputFilesPath() . $fileInfo['basename'], $imageString);
+                    $styles .= 'body {background-image: url("' . $this->htmlPlugin->getOutputFilesPath() . $fileInfo['basename'] . '");}';
                 }
             }
         }
@@ -546,11 +550,11 @@ class TransformDocAdvHTML
                                 }
                                 if ($type != 'numberingStyleParagraph') {
                                     if ($pprStyle->hasAttribute('w:hanging')) {
-                                        $styles .= 'padding-left: ' . $this->htmlPlugin->transformSizes($pprStyle->getAttribute('w:hanging'), 'twips') . '; text-indent: -'. $this->htmlPlugin->transformSizes($pprStyle->getAttribute('w:hanging'), 'twips') . ';';
+                                        $styles .= 'padding-left: ' . $this->htmlPlugin->transformSizes($pprStyle->getAttribute('w:hanging'), 'twips') . '; text-indent: -' . $this->htmlPlugin->transformSizes($pprStyle->getAttribute('w:hanging'), 'twips') . ';';
                                     }
                                 }
                                 if ($pprStyle->hasAttribute('w:firstLine')) {
-                                     $styles .= 'text-indent: ' . $this->htmlPlugin->transformSizes($pprStyle->getAttribute('w:firstLine'), 'twips') . ';';
+                                    $styles .= 'text-indent: ' . $this->htmlPlugin->transformSizes($pprStyle->getAttribute('w:firstLine'), 'twips') . ';';
                                 }
                                 break;
                             case 'w:jc':
@@ -577,7 +581,7 @@ class TransformDocAdvHTML
                                 }
                                 break;
                             case 'w:pageBreakBefore':
-                                if ($pprStyle->getAttribute('w:val') == 'on'  || !$pprStyle->hasAttribute('w:val')) {
+                                if ($pprStyle->getAttribute('w:val') == 'on' || !$pprStyle->hasAttribute('w:val')) {
                                     $styles .= 'page-break-before: always;';
                                 }
                                 break;
@@ -628,7 +632,7 @@ class TransformDocAdvHTML
                                 }
                                 break;
                             case 'w:wordWrap':
-                                if ($pprStyle->getAttribute('w:val') == 'on'  || !$pprStyle->hasAttribute('w:val')) {
+                                if ($pprStyle->getAttribute('w:val') == 'on' || !$pprStyle->hasAttribute('w:val')) {
                                     $styles .= 'word-wrap: break-word;';
                                 }
                                 break;
@@ -693,7 +697,7 @@ class TransformDocAdvHTML
                                 }
                                 break;
                             case 'w:caps':
-                                if ($rprStyle->getAttribute('w:val') == 'on'  || !$rprStyle->hasAttribute('w:val')) {
+                                if ($rprStyle->getAttribute('w:val') == 'on' || !$rprStyle->hasAttribute('w:val')) {
                                     $styles .= 'text-transform: uppercase;';
                                 }
                                 break;
@@ -701,7 +705,7 @@ class TransformDocAdvHTML
                                 $styles .= 'color: #' . $this->htmlPlugin->transformColors($rprStyle->getAttribute('w:val')) . ';';
                                 break;
                             case 'w:dstrike':
-                                if ($rprStyle->getAttribute('w:val') == 'on'  || !$rprStyle->hasAttribute('w:val')) {
+                                if ($rprStyle->getAttribute('w:val') == 'on' || !$rprStyle->hasAttribute('w:val')) {
                                     if (strstr($styles, 'text-decoration: ')) {
                                         $styles .= str_replace('text-decoration: ', 'text-decoration: line-through ', $styles);
                                     } else {
@@ -714,7 +718,7 @@ class TransformDocAdvHTML
                                 $styles .= 'background-color: ' . $rprStyle->getAttribute('w:val') . ';';
                                 break;
                             case 'w:i':
-                                if ($rprStyle->getAttribute('w:val') == 'on'  || !$rprStyle->hasAttribute('w:val')) {
+                                if ($rprStyle->getAttribute('w:val') == 'on' || !$rprStyle->hasAttribute('w:val')) {
                                     $styles .= 'font-style: italic;';
                                 }
                                 break;
@@ -725,8 +729,8 @@ class TransformDocAdvHTML
                                 } else if ($rprStyle->hasAttribute('w:cs')) {
                                     $fontFamily = $rprStyle->getAttribute('w:cs');
                                 }
-                                
-                                $styles .= 'font-family: "' . $fontFamily. '";';
+
+                                $styles .= 'font-family: "' . $fontFamily . '";';
                                 break;
                             case 'w:shd':
                                 if ($rprStyle->hasAttribute('w:fill') && $rprStyle->getAttribute('w:fill') != 'auto') {
@@ -734,12 +738,12 @@ class TransformDocAdvHTML
                                 }
                                 break;
                             case 'w:smallCaps':
-                                if ($rprStyle->getAttribute('w:val') == 'on'  || !$rprStyle->hasAttribute('w:val')) {
+                                if ($rprStyle->getAttribute('w:val') == 'on' || !$rprStyle->hasAttribute('w:val')) {
                                     $styles .= 'text-transform: uppercase;font-size: small;';
                                 }
                                 break;
                             case 'w:strike':
-                                if ($rprStyle->getAttribute('w:val') == 'on'  || !$rprStyle->hasAttribute('w:val')) {
+                                if ($rprStyle->getAttribute('w:val') == 'on' || !$rprStyle->hasAttribute('w:val')) {
                                     if (strstr($styles, 'text-decoration: ')) {
                                         $styles = str_replace('text-decoration: ', 'text-decoration: line-through ', $styles);
                                     } else {
@@ -845,7 +849,7 @@ class TransformDocAdvHTML
         if ($docDefaultsStylesPpr) {
             $css .= 'p, h1, h2, h3, h4, h5, h6, ul, ol {' . $this->addPprStyles($docDefaultsStylesPpr) . '}';
         }
-        
+
         // addRprStyles
         if ($docDefaultsStylesRpr) {
             $css .= 'span {' . $this->addRprStyles($docDefaultsStylesRpr) . '}';
@@ -917,13 +921,13 @@ class TransformDocAdvHTML
         $borderStyle = 'solid';
         switch ($style) {
             case 'dashed':
-                $borderStyle ='dashed';
+                $borderStyle = 'dashed';
                 break;
             case 'dotted':
-                $borderStyle ='dotted';
+                $borderStyle = 'dotted';
                 break;
             case 'double':
-                $borderStyle ='double';
+                $borderStyle = 'double';
                 break;
             case 'nil':
             case 'none':
@@ -996,14 +1000,14 @@ class TransformDocAdvHTML
                         $borderStylesCell .= 'border-bottom: hidden;';
                     } else {
                         $borderStyle = $this->getBorderStyle($elementWTcBordersBottom->item(0)->getAttribute('w:val'));
-                        $cellStyles.= 'border-bottom: ' . $this->htmlPlugin->transformSizes($elementWTcBordersBottom->item(0)->getAttribute('w:sz'), 'eights') . ' ' . $borderStyle . ' #' . $this->htmlPlugin->transformColors($elementWTcBordersBottom->item(0)->getAttribute('w:color')) . ';';
+                        $cellStyles .= 'border-bottom: ' . $this->htmlPlugin->transformSizes($elementWTcBordersBottom->item(0)->getAttribute('w:sz'), 'eights') . ' ' . $borderStyle . ' #' . $this->htmlPlugin->transformColors($elementWTcBordersBottom->item(0)->getAttribute('w:color')) . ';';
                         $borderStylesCell .= 'border-bottom: ' . $this->htmlPlugin->transformSizes($elementWTcBordersBottom->item(0)->getAttribute('w:sz'), 'eights') . ' ' . $borderStyle . ' #' . $this->htmlPlugin->transformColors($elementWTcBordersBottom->item(0)->getAttribute('w:color')) . ';';
                     }
                 } else {
                     $cellStyles .= 'border-bottom: none;';
                     $borderStylesCell .= 'border-bottom: none;';
                 }
-                
+
                 // left
                 $elementWTcBordersLeft = $elementWTcBorders->item(0)->getElementsByTagNameNS('http://schemas.openxmlformats.org/wordprocessingml/2006/main', 'left');
                 if ($elementWTcBordersLeft->length > 0) {
@@ -1088,7 +1092,7 @@ class TransformDocAdvHTML
         if ($elementNum != '') {
             // get w:abstractNumId used to set the numbering styles
             $abstractNumId = $elementNum->getElementsByTagNameNS('http://schemas.openxmlformats.org/wordprocessingml/2006/main', 'abstractNumId')->item(0)->getAttribute('w:val');
-            
+
             // get the style of the w:abstractNum related to w:abstractNumId
             $elementAbstractNumStart = $xpathNumbering->query(
                 '//w:abstractNum[@w:abstractNumId="' . $abstractNumId . '"]' .
@@ -1098,7 +1102,7 @@ class TransformDocAdvHTML
 
             return $elementAbstractNumStart->getAttribute('w:val');
         }
-        
+
         // style not found, return 1 as default value
         return '1';
     }
@@ -1127,7 +1131,7 @@ class TransformDocAdvHTML
         if ($elementNum != '') {
             // get w:abstractNumId used to set the numbering styles
             $abstractNumId = $elementNum->getElementsByTagNameNS('http://schemas.openxmlformats.org/wordprocessingml/2006/main', 'abstractNumId')->item(0)->getAttribute('w:val');
-            
+
             // get the style of the w:abstractNum related to w:abstractNumId
             $elementAbstractNumStart = $xpathNumbering->query(
                 '//w:abstractNum[@w:abstractNumId="' . $abstractNumId . '"]' .
@@ -1141,7 +1145,7 @@ class TransformDocAdvHTML
                 return '1';
             }
         }
-        
+
         // style not found, return 1 as default value
         return '1';
     }
@@ -1180,7 +1184,7 @@ class TransformDocAdvHTML
 
             return $elementAbstractNumLvl;
         }
-        
+
         // style not found
         return null;
     }
@@ -1209,19 +1213,19 @@ class TransformDocAdvHTML
         if ($elementNum != '') {
             // get w:abstractNumId used to set the numbering styles
             $abstractNumId = $elementNum->getElementsByTagNameNS('http://schemas.openxmlformats.org/wordprocessingml/2006/main', 'abstractNumId')->item(0)->getAttribute('w:val');
-            
+
             // get the style of the w:abstractNum related to w:abstractNumId
             $elementAbstractNumFmt = $xpathNumbering->query(
                 '//w:abstractNum[@w:abstractNumId="' . $abstractNumId . '"]' .
                 '/w:lvl[@w:ilvl="' . $level . '"]' .
                 '/w:numFmt'
             )->item(0);
-            
+
             if ($elementAbstractNumFmt != null) {
                 return $elementAbstractNumFmt->getAttribute('w:val');
             }
         }
-        
+
         // style not found
         return null;
     }
@@ -1332,10 +1336,10 @@ class TransformDocAdvHTML
                 $elementWTblBordersBottom = $elementWTblBorders->item(0)->getElementsByTagNameNS('http://schemas.openxmlformats.org/wordprocessingml/2006/main', 'bottom');
                 if ($elementWTblBordersBottom->length > 0) {
                     $borderStyle = $this->getBorderStyle($elementWTblBordersBottom->item(0)->getAttribute('w:val'));
-                    $tableStyles.= 'border-bottom: ' . $this->htmlPlugin->transformSizes($elementWTblBordersBottom->item(0)->getAttribute('w:sz'), 'eights') . ' ' . $borderStyle . ' #' . $this->htmlPlugin->transformColors($elementWTblBordersBottom->item(0)->getAttribute('w:color')) . ';';
+                    $tableStyles .= 'border-bottom: ' . $this->htmlPlugin->transformSizes($elementWTblBordersBottom->item(0)->getAttribute('w:sz'), 'eights') . ' ' . $borderStyle . ' #' . $this->htmlPlugin->transformColors($elementWTblBordersBottom->item(0)->getAttribute('w:color')) . ';';
                     $borderStylesTable .= 'border-bottom: ' . $this->htmlPlugin->transformSizes($elementWTblBordersBottom->item(0)->getAttribute('w:sz'), 'eights') . ' ' . $borderStyle . ' #' . $this->htmlPlugin->transformColors($elementWTblBordersBottom->item(0)->getAttribute('w:color')) . ';';
                 }
-                
+
                 // left
                 $elementWTblBordersLeft = $elementWTblBorders->item(0)->getElementsByTagNameNS('http://schemas.openxmlformats.org/wordprocessingml/2006/main', 'left');
                 if ($elementWTblBordersLeft->length > 0) {
@@ -1568,13 +1572,13 @@ class TransformDocAdvHTML
         } else if ($this->target == 'footnotes') {
             $relsContent = $this->docxStructure->getContent('word/_rels/footnotes.xml.rels');
         } else if ($this->target == 'headers') {
-            $relsContent = $this->docxStructure->getContent('word/_rels/'.$this->targetExtra.'.rels');
+            $relsContent = $this->docxStructure->getContent('word/_rels/' . $this->targetExtra . '.rels');
         } else if ($this->target == 'footers') {
-            $relsContent = $this->docxStructure->getContent('word/_rels/'.$this->targetExtra.'.rels');
+            $relsContent = $this->docxStructure->getContent('word/_rels/' . $this->targetExtra . '.rels');
         } else {
             $relsContent = $this->docxStructure->getContent('word/_rels/document.xml.rels');
         }
-        
+
 
         $xmlDocumentRels = new \DOMDocument();
         $optionEntityLoader = libxml_disable_entity_loader(true);
@@ -1583,13 +1587,13 @@ class TransformDocAdvHTML
         $xpath = new \DOMXPath($xmlDocumentRels);
         $xpath->registerNamespace('r', 'http://schemas.openxmlformats.org/package/2006/relationships');
 
-        $elementId = $xpath->query('//r:Relationships/r:Relationship[@Id="'.$id.'"]')->item(0);
+        $elementId = $xpath->query('//r:Relationships/r:Relationship[@Id="' . $id . '"]')->item(0);
 
 
         if (!$elementId || !$elementId->hasAttribute('Target')) {
             return null;
         }
-        
+
         return $elementId->getAttribute('Target');
     }
 
@@ -1616,13 +1620,12 @@ class TransformDocAdvHTML
     {
         $rscXML = new \DOMDocument();
         $optionEntityLoader = libxml_disable_entity_loader(false);
-        $mathMLXML = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math">' . $childNode->ownerDocument->saveXML($childNode). '</w:document>';
+        $mathMLXML = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math">' . $childNode->ownerDocument->saveXML($childNode) . '</w:document>';
         $rscXML->loadXML($mathMLXML);
         libxml_disable_entity_loader($optionEntityLoader);
         $objXSLTProc = new \XSLTProcessor();
         $objXSL = new \DOMDocument();
         $objXSL->load(dirname(__FILE__) . '/../../../xsl/OMML2MML.XSL');
-//        var_dump(dirname(__FILE__) . '/../xsl/OMML2MML.XSL');
         $objXSLTProc->importStylesheet($objXSL);
 
         $mathML = $objXSLTProc->transformToXML($rscXML);
@@ -1638,7 +1641,7 @@ class TransformDocAdvHTML
     protected function transformV_TEXTBOX($childNode, $nodeClass)
     {
         // set textbox as div
-        $this->html .= '<div class="'.$nodeClass.'">';
+        $this->html .= '<div class="' . $nodeClass . '">';
 
         // get and add styles
         $textboxStyles = $childNode->parentNode->getAttribute('style');
@@ -1695,7 +1698,7 @@ class TransformDocAdvHTML
         // get file content
         if ($childNode->hasAttribute('r:id')) {
             $target = $this->getRelationshipContent($childNode->getAttribute('r:id'));
-            $this->html .= '<a href="' . $target . '" class="'.$nodeClass.' ' . ($this->htmlPlugin->getExtraClass('a')==null?'':$this->htmlPlugin->getExtraClass('a')) . '">Download ' . $target . '</a>';
+            $this->html .= '<a href="' . $target . '" class="' . $nodeClass . ' ' . ($this->htmlPlugin->getExtraClass('a') == null ? '' : $this->htmlPlugin->getExtraClass('a')) . '">Download ' . $target . '</a>';
         }
     }
 
@@ -1708,7 +1711,7 @@ class TransformDocAdvHTML
     protected function transformW_BOOKMARKSTART($childNode, $nodeClass)
     {
         if ($childNode->hasAttribute('w:name')) {
-            $this->html .= '<a class="'.$nodeClass.'" name="'.$childNode->getAttribute('w:name').'"></a>';
+            $this->html .= '<a class="' . $nodeClass . '" name="' . $childNode->getAttribute('w:name') . '"></a>';
         }
     }
 
@@ -1862,11 +1865,11 @@ class TransformDocAdvHTML
                             case 'sysDash':
                             case 'sysDashDot':
                             case 'sysDashDotDot':
-                                $borderStyle ='dashed';
+                                $borderStyle = 'dashed';
                                 break;
                             case 'dot':
                             case 'sysDot':
-                                $borderStyle ='dotted';
+                                $borderStyle = 'dotted';
                                 break;
                             case 'solid':
                                 $borderStyle = 'solid';
@@ -1892,7 +1895,7 @@ class TransformDocAdvHTML
                 $this->css[$nodeClass] .= 'display: inline;';
             } else {
                 // anchor tag
-                
+
                 // wrapSquare
                 $elementWrapSquare = $childNode->getElementsByTagNameNS('http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing', 'wrapSquare');
                 if ($elementWrapSquare->length > 0) {
@@ -1926,7 +1929,7 @@ class TransformDocAdvHTML
                 $linkTag = true;
             }
 
-            $this->html .= '<' . $this->htmlPlugin->getTag('image') . ' class="' . $nodeClass . ' ' . ($this->htmlPlugin->getExtraClass('img')==null?'':$this->htmlPlugin->getExtraClass('img')) . '" src="' . $src . '" width="' . $width . '" height="' . $height . '">';
+            $this->html .= '<' . $this->htmlPlugin->getTag('image') . ' class="' . $nodeClass . ' ' . ($this->htmlPlugin->getExtraClass('img') == null ? '' : $this->htmlPlugin->getExtraClass('img')) . '" src="' . $src . '" width="' . $width . '" height="' . $height . '">';
 
             if ($linkTag === true) {
                 $this->html .= '</a>';
@@ -1975,7 +1978,7 @@ class TransformDocAdvHTML
                     <script>
                         chartDiv = document.getElementById("chart_'.$elementCChart->getAttribute('r:id').'");
                         Plotly.plot(
-                            chartDiv, 
+                            chartDiv,
                             [{
                                 values: ['.implode(',', $valuesValues).'],
                                 labels: ['.implode(',', $labelsValues).'],
@@ -2026,12 +2029,12 @@ class TransformDocAdvHTML
             $return = '';
 
             $endnotesIndex = count($this->endnotesIndex) + 1;
-            while ($endnotesIndex > 0)  { 
+            while ($endnotesIndex > 0) {
                 foreach ($table as $rom => $arb) {
-                    if ($endnotesIndex >= $arb) { 
-                        $endnotesIndex -= $arb; 
-                        $return .= $rom; 
-                        break; 
+                    if ($endnotesIndex >= $arb) {
+                        $endnotesIndex -= $arb;
+                        $return .= $rom;
+                        break;
                     }
                 }
             }
@@ -2051,8 +2054,7 @@ class TransformDocAdvHTML
     protected function transformW_FLDCHAR($childNode, $nodeClass)
     {
         if ($childNode->hasAttribute('w:fldCharType') && $childNode->getAttribute('w:fldCharType') == 'end') {
-            if(!$this->complexField){
-                $this->complexField;
+            if (!$this->complexField) {
                 return;
             }
             if ($this->complexField['type'] == 'FORMCHECKBOX') {
@@ -2143,7 +2145,7 @@ class TransformDocAdvHTML
             }
         }
 
-        $this->html .= '<' . $this->htmlPlugin->getTag('hyperlink') . ' class="'.$nodeClass.' ' . ($this->htmlPlugin->getExtraClass('hyperlink')==null?'':$this->htmlPlugin->getExtraClass('hyperlink')) . '" href="'.$href.'" '.$target.'>';
+        $this->html .= '<' . $this->htmlPlugin->getTag('hyperlink') . ' class="' . $nodeClass . ' ' . ($this->htmlPlugin->getExtraClass('hyperlink') == null ? '' : $this->htmlPlugin->getExtraClass('hyperlink')) . '" href="' . $href . '" ' . $target . '>';
 
         // handle child elements
         if ($childNode->hasChildNodes()) {
@@ -2193,7 +2195,7 @@ class TransformDocAdvHTML
                 $listEntryNodes = $xpathPInstrText->query('//w:ddList/w:listEntry', $nodePInstrText);
 
                 foreach ($listEntryNodes as $listEntryNode) {
-                    $this->html .= '<option value="'.$listEntryNode->getAttribute('w:val').'">'.$listEntryNode->getAttribute('w:val').'</option>';
+                    $this->html .= '<option value="' . $listEntryNode->getAttribute('w:val') . '">' . $listEntryNode->getAttribute('w:val') . '</option>';
                 }
 
                 $this->html .= '</select>';
@@ -2208,13 +2210,13 @@ class TransformDocAdvHTML
             }
 
             if ($contentComplexField[0] == 'HYPERLINK') {
-                $this->html .= '<a class="{{ CLASS_COMPLEX_FIELD }}" href="'.str_replace(array('&quot;', '"'), '', $contentComplexField[1]).'" target="_blank">';
+                $this->html .= '<a class="{{ CLASS_COMPLEX_FIELD }}" href="' . str_replace(array('&quot;', '"'), '', $contentComplexField[1]) . '" target="_blank">';
 
                 $this->complexField = array('type' => 'HYPERLINK');
             }
 
             if ($contentComplexField[0] == 'PAGEREF') {
-                $this->html .= '<a class="{{ CLASS_COMPLEX_FIELD }}" href="#'.$contentComplexField[1].'">';
+                $this->html .= '<a class="{{ CLASS_COMPLEX_FIELD }}" href="#' . $contentComplexField[1] . '">';
 
                 $this->complexField = array('type' => 'PAGEREF');
             }
@@ -2280,14 +2282,14 @@ class TransformDocAdvHTML
     protected function transformW_P($childNode, $nodeClass)
     {
         // if it's an internal section avoid adding the paragraph
-        $sectPrTag = $childNode->getElementsByTagNameNS('http://schemas.openxmlformats.org/wordprocessingml/2006/main', 'sectPr');
-        if ($sectPrTag->length > 0) {
-            $this->transformXml($childNode);
-            return;
-        }
+//        $sectPrTag = $childNode->getElementsByTagNameNS('http://schemas.openxmlformats.org/wordprocessingml/2006/main', 'sectPr');
+//        if ($sectPrTag->length > 0) {
+//            $this->transformXml($childNode);
+//            return;
+//        }
 
         // handle tag
-        
+
         // default element
         $elementTag = $this->htmlPlugin->getTag('paragraph');
 
@@ -2300,7 +2302,7 @@ class TransformDocAdvHTML
         // numbering tag
         if (is_array($this->numberingParagraph)) {
             // handle as p tags
-            
+
             // handle numbering in paragraph
             $numPrTag = $childNode->getElementsByTagNameNS('http://schemas.openxmlformats.org/wordprocessingml/2006/main', 'numPr');
             // handle numbering in pStyle
@@ -2342,15 +2344,15 @@ class TransformDocAdvHTML
 
                     $this->numberingParagraph['level'] = $numberingLevel;
                     $this->numberingParagraph['numId'] = $numIdTag->item(0)->getAttribute('w:val');
-                    
+
                     switch ($numberingStyle) {
                         case 'bullet':
                             // default value
-                            $this->prependTValue = '•'  . ' ';
+                            $this->prependTValue = '•' . ' ';
                             if ($listLvlText == 'o') {
-                                $this->prependTValue = '◦'  . ' ';
+                                $this->prependTValue = '◦' . ' ';
                             }
-                            break;  
+                            break;
                         case 'decimal':
                             // iterate numberLevel to handle level list when displaying sublevels such as 1.1. 1.2
                             for ($i = $numberingLevel; $i >= 0; $i--) {
@@ -2481,7 +2483,7 @@ class TransformDocAdvHTML
                             default:
                                 break;
                         }
-                        $this->html .= '<'.$tagTypeList.' class="'.$nodeClass.' ' . ($this->htmlPlugin->getExtraClass('list')==null?'':$this->htmlPlugin->getExtraClass('list')) . '" ' . 'start="' . $this->listStartValues[$numIdTag->item(0)->getAttribute('w:val')][$numberingLevel] . '">';
+                        $this->html .= '<' . $tagTypeList . ' class="' . $nodeClass . ' ' . ($this->htmlPlugin->getExtraClass('list') == null ? '' : $this->htmlPlugin->getExtraClass('list')) . '" ' . 'start="' . $this->listStartValues[$numIdTag->item(0)->getAttribute('w:val')][$numberingLevel] . '">';
                     }
 
                 }
@@ -2550,14 +2552,30 @@ class TransformDocAdvHTML
         // remove extra , before adding it to the HTML
         $nodeClassHTML = str_replace(',', '', $nodeClass);
 
-        $this->html .= '<'.$elementTag.' class="'.$nodeClassHTML.' ' . ($this->htmlPlugin->getExtraClass('list')==null?'':$this->htmlPlugin->getExtraClass('paragraph')) . '">';
+        $isBold = false;
+        $strongTag = $this->htmlPlugin->getTag('strong');
+        if ($this->isBold($childNode) || (isset($numberingLevelTags) && $this->isBold($numberingLevelTags))) {
+            $isBold = true;
+        }
+
+        // we don't need render class for p or li tag
+//        $this->html .= '<'.$elementTag.' class="'.$nodeClassHTML.' ' . ($this->htmlPlugin->getExtraClass('list')==null?'':$this->htmlPlugin->getExtraClass('paragraph')) . '">';
+        $this->html .= '<' . $elementTag . '>';
+
+        if ($isBold) {
+            $this->html .= '<' . $strongTag . '>';
+        }
 
         // handle child elements
         if ($childNode->hasChildNodes()) {
             $this->transformXml($childNode);
         }
 
-        $this->html .= '</'.$elementTag.'>';
+        if ($isBold) {
+            $this->html .= '</' . $strongTag . '>';
+        }
+
+        $this->html .= '</' . $elementTag . '>';
 
         // numbering tag
         if (!is_array($this->numberingParagraph)) {
@@ -2616,14 +2634,14 @@ class TransformDocAdvHTML
                 // get the numbering style based on the numbering ID and its level
                 $numberingStyle = $this->getNumberingType($numIdTag->item(0)->getAttribute('w:val'), $numberingLevel);
                 if (in_array($numberingStyle, array('decimal', 'upperRoman', 'lowerRoman', 'upperLetter', 'lowerLetter'))) {
-                            $tagTypeList = $this->htmlPlugin->getTag('orderedList');
+                    $tagTypeList = $this->htmlPlugin->getTag('orderedList');
                 } else {
                     $tagTypeList = $this->htmlPlugin->getTag('unorderedList');
                 }
                 if ($closeNewList === true) {
                     unset($this->listStartValues[$numIdTag->item(0)->getAttribute('w:val')]);
-                    for ($iClose = 0; $iClose < $iterationListClose; $iClose++) { 
-                        $this->html .= '</'.$tagTypeList.'>';
+                    for ($iClose = 0; $iClose < $iterationListClose; $iClose++) {
+                        $this->html .= '</' . $tagTypeList . '>';
                     }
                 }
             }
@@ -2681,11 +2699,13 @@ class TransformDocAdvHTML
                 $this->html = str_replace('{{ CLASS_COMPLEX_FIELD }}', $nodeClass, $this->html);
             }
         }
-        
+
         // remove extra , before adding it to the HTML
         $nodeClassHTML = str_replace(',', '', $nodeClass);
 
-        $this->html .= '<'.$elementTag.' class="'.$nodeClassHTML.' ' . ($this->htmlPlugin->getExtraClass('span')==null?'':$this->htmlPlugin->getExtraClass('span')) . '">';
+        // we don't need render class name for span tag
+//        $this->html .= '<'.$elementTag.' class="'.$nodeClassHTML.' ' . ($this->htmlPlugin->getExtraClass('span')==null?'':$this->htmlPlugin->getExtraClass('span')) . '">';
+        $this->html .= '<' . $elementTag . '>';
 
         // get endnote contents if any exist. This avoid adding the endnote content out of the <p> tag
         if ($this->endnotesContent != null) {
@@ -2716,7 +2736,7 @@ class TransformDocAdvHTML
             $this->html .= '&nbsp;';
         }
 
-        $this->html .= '</'.$elementTag.'>';
+        $this->html .= '</' . $elementTag . '>';
     }
 
     /**
@@ -2765,13 +2785,13 @@ class TransformDocAdvHTML
                             if ($childNodesSectionBorder->hasAttribute('w:val')) {
                                 switch ($childNodesSectionBorder->getAttribute('w:val')) {
                                     case 'dashed':
-                                        $borderStyle ='dashed';
+                                        $borderStyle = 'dashed';
                                         break;
                                     case 'dotted':
-                                        $borderStyle ='dotted';
+                                        $borderStyle = 'dotted';
                                         break;
                                     case 'double':
-                                        $borderStyle ='double';
+                                        $borderStyle = 'double';
                                         break;
                                     case 'nil':
                                     case 'none':
@@ -2853,7 +2873,7 @@ class TransformDocAdvHTML
         if ($childNode->parentNode->parentNode->tagName == 'w:p') {
             // keep the section class name to be used when a section tag is found when parsing the document
             $this->currentSectionClassName = $this->htmlPlugin->generateClassName();
-            $this->html .= '<' . $this->htmlPlugin->getTag('section') . ' class="' . $this->currentSectionClassName . ' ' . ($this->htmlPlugin->getExtraClass('section')==null?'':$this->htmlPlugin->getExtraClass('section')) . '">__HEADERCONTENTSECTION__';
+            $this->html .= '<' . $this->htmlPlugin->getTag('section') . ' class="' . $this->currentSectionClassName . ' ' . ($this->htmlPlugin->getExtraClass('section') == null ? '' : $this->htmlPlugin->getExtraClass('section')) . '">__HEADERCONTENTSECTION__';
         }
     }
 
@@ -2879,21 +2899,21 @@ class TransformDocAdvHTML
                 }
 
                 foreach ($lastChildSdtPr->childNodes as $listItem) {
-                    $this->html .= '<' . $this->htmlPlugin->getTag('comboBoxItem') . ' value="'.$listItem->getAttribute('w:value').'">'.$listItem->getAttribute('w:displayText').'</' . $this->htmlPlugin->getTag('comboBoxItem') . '>';
+                    $this->html .= '<' . $this->htmlPlugin->getTag('comboBoxItem') . ' value="' . $listItem->getAttribute('w:value') . '">' . $listItem->getAttribute('w:displayText') . '</' . $this->htmlPlugin->getTag('comboBoxItem') . '>';
                 }
-                 $this->html .= '</' . $this->htmlPlugin->getTag('comboBox') . '></p>';
+                $this->html .= '</' . $this->htmlPlugin->getTag('comboBox') . '></p>';
                 break;
             case 'w:date';
                 // get text value from w:stdContent tag
                 $sdtContentNode = $childNode->getElementsByTagNameNS('http://schemas.openxmlformats.org/wordprocessingml/2006/main', 'sdtContent')->item(0);
-                
-                $this->html .= '<p><input type="date" placeholder="'.$sdtContentNode->textContent.'"></p>';
+
+                $this->html .= '<p><input type="date" placeholder="' . $sdtContentNode->textContent . '"></p>';
                 break;
             default:
                 // get text value from w:stdContent tag
                 $sdtContentNode = $childNode->getElementsByTagNameNS('http://schemas.openxmlformats.org/wordprocessingml/2006/main', 'sdtContent')->item(0);
-                
-                $this->html .= '<span>'.$sdtContentNode->textContent.'</span>';
+
+                $this->html .= '<span>' . $sdtContentNode->textContent . '</span>';
                 break;
         }
     }
@@ -2962,7 +2982,7 @@ class TransformDocAdvHTML
         // default values
         $this->css[$nodeClass] .= 'border-spacing: 0; border-collapse: collapse;';
 
-        $this->html .= '<' . $this->htmlPlugin->getTag('table') . ' class="' . $nodeClass . ' ' . ($this->htmlPlugin->getExtraClass('table')==null?'':$this->htmlPlugin->getExtraClass('table')) . '">';
+        $this->html .= '<' . $this->htmlPlugin->getTag('table') . ' class="' . $nodeClass . ' ' . ($this->htmlPlugin->getExtraClass('table') == null ? '' : $this->htmlPlugin->getExtraClass('table')) . '">';
 
         // rows
         $xpathDOMXPathWTblTr = new \DOMXPath($childNode->ownerDocument);
@@ -2978,7 +2998,7 @@ class TransformDocAdvHTML
             // row class
             $nodeTrClass = $this->htmlPlugin->generateClassName();
             $this->css[$nodeTrClass] = '';
-            $this->html .= '<' . $this->htmlPlugin->getTag('tr') . ' class="' . $nodeTrClass . ' ' . ($this->htmlPlugin->getExtraClass('tr')==null?'':$this->htmlPlugin->getExtraClass('tr')) . '">';
+            $this->html .= '<' . $this->htmlPlugin->getTag('tr') . ' class="' . $nodeTrClass . ' ' . ($this->htmlPlugin->getExtraClass('tr') == null ? '' : $this->htmlPlugin->getExtraClass('tr')) . '">';
 
             // row styles tblStylePr
             $elementWTblTrPr = $elementWTblTr->getElementsByTagNameNS('http://schemas.openxmlformats.org/wordprocessingml/2006/main', 'trPr');
@@ -2990,7 +3010,7 @@ class TransformDocAdvHTML
                 }
             }
 
-            // cells   
+            // cells
             $xpathDOMXPathWTblTrTc = new \DOMXPath($elementWTblTr->ownerDocument);
             $xpathDOMXPathWTblTrTc->registerNamespace('w', 'http://schemas.openxmlformats.org/wordprocessingml/2006/main');
             $elementsWTblTrTc = $xpathDOMXPathWTblTrTc->query('w:tc|w:sdt', $elementWTblTr);
@@ -3023,9 +3043,9 @@ class TransformDocAdvHTML
                     $rowspanValue = $elementWTblTrTcTcprVMerge->item(0)->getAttribute('w:val');
 
                     if ($rowspanValue == 'restart') {
-                        $rowspan['__ROWSPANVALUE_'.$indexTd.'__'] = 1;
+                        $rowspan['__ROWSPANVALUE_' . $indexTd . '__'] = 1;
                     } else {
-                        $rowspan['__ROWSPANVALUE_'.$indexTd.'__'] += 1;
+                        $rowspan['__ROWSPANVALUE_' . $indexTd . '__'] += 1;
 
                         // MS Word avoid adding tc tags when there're colspan.
                         // Sum the current indexTD to colspan and remove one value as it's added later
@@ -3039,7 +3059,7 @@ class TransformDocAdvHTML
                 }
 
                 // add td tag
-                $this->html .= '<' . $this->htmlPlugin->getTag('tc') . ' class="' . $nodeTdClass . ' ' . ($this->htmlPlugin->getExtraClass('td')==null?'':$this->htmlPlugin->getExtraClass('td')) . '" ';
+                $this->html .= '<' . $this->htmlPlugin->getTag('tc') . ' class="' . $nodeTdClass . ' ' . ($this->htmlPlugin->getExtraClass('td') == null ? '' : $this->htmlPlugin->getExtraClass('td')) . '" ';
 
                 // add colspan value
                 if ($colspan > 1) {
@@ -3076,7 +3096,7 @@ class TransformDocAdvHTML
                 if (!empty($cellPadding)) {
                     $this->css[$nodeTdClass] .= $cellPadding;
                 }
-                
+
                 // cell properties
                 $elementWTblTrTcTcpr = $elementWTblTrTc->getElementsByTagNameNS('http://schemas.openxmlformats.org/wordprocessingml/2006/main', 'tcPr');
                 if ($elementWTblTrTcTcpr->length > 0) {
@@ -3187,7 +3207,7 @@ class TransformDocAdvHTML
      * @param String $nodeClass
      */
     protected function transformW_TAB($childNode, $nodeClass)
-    {        
+    {
         $this->html .= '&emsp;';
     }
 
@@ -3217,7 +3237,7 @@ class TransformDocAdvHTML
             $nodeValue = $this->prependTValue . $nodeValue;
             $this->prependTValue = null;
         }
-        
+
         $this->html .= $nodeValue;
     }
 
@@ -3226,21 +3246,55 @@ class TransformDocAdvHTML
      *
      * @param integer $value
      */
-    protected function transformIntegerToRoman($value) {
+    protected function transformIntegerToRoman($value)
+    {
         $table = array('m' => 1000, 'cm' => 900, 'd' => 500, 'cd' => 400, 'c' => 100, 'xc' => 90, 'l' => 50, 'xl' => 40, 'x' => 10, 'ix' => 9, 'v' => 5, 'iv' => 4, 'i' => 1);
         $return = '';
 
-        while ($value > 0)  { 
+        while ($value > 0) {
             foreach ($table as $rom => $arb) {
-                if ($value >= $arb) { 
-                    $value -= $arb; 
-                    $return .= $rom; 
-                    break; 
+                if ($value >= $arb) {
+                    $value -= $arb;
+                    $return .= $rom;
+                    break;
                 }
             }
         }
-        
+
         return $return;
     }
 
+    protected function isBold($node)
+    {
+        try {
+            if ($node) {
+                if (method_exists($node, 'getElementsByTagNameNS')) {
+                    $rprStyles = $node->getElementsByTagNameNS('http://schemas.openxmlformats.org/wordprocessingml/2006/main', 'rPr');
+                    if ($rprStyles->length > 0 && $rprStyles->item(0)->hasChildNodes()) {
+                        foreach ($rprStyles->item(0)->childNodes as $rprStyle) {
+                            if (isset($rprStyle->tagName)) {
+                                if ($rprStyle->tagName == 'w:b') {
+                                    if ($rprStyle->getAttribute('w:val') == 'on' || !$rprStyle->hasAttribute('w:val')) {
+                                        return true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if ($node->hasChildNodes()) {
+                    foreach ($node->childNodes as $childNode) {
+                        if ($this->isBold($childNode)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            return false;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
 }

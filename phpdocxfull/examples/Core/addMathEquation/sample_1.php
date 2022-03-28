@@ -22,7 +22,7 @@ $blocks = $docx->addMathEquation('../../files/math.docx', 'docx');
 //$transformHTMLPlugin = new TransformDocAdvHTMLDefaultPlugin();
 $transformHTMLPlugin = new Phpdocx\Transform\TransformDocAdvHTMLDefaultPlugin();
 
-$transform = new Phpdocx\Transform\TransformDocAdvHTML('../../files/math.docx');
+$transform = new Phpdocx\Transform\TransformDocAdvHTMLChild('../../files/math.docx');
 $html = $transform->transform($transformHTMLPlugin);
 
 echo $html;

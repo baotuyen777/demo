@@ -63,6 +63,7 @@ class TransformDocAdvHTMLTCPDFPlugin extends TransformDocAdvHTMLPlugin
         'tc' => 'td',
         'tr' => 'tr',
         'unorderedList' => 'ul',
+        'strong' => 'strong',
     );
 
     protected $unit = 'px';
@@ -110,7 +111,7 @@ class TransformDocAdvHTMLTCPDFPlugin extends TransformDocAdvHTMLPlugin
     public function transformSizes($value, $source, $target = null)
     {
         $returnValue = 0;
-        
+
         if ($target === null) {
             $target = $this->unit;
         }
@@ -159,10 +160,10 @@ class TransformDocAdvHTMLTCPDFPlugin extends TransformDocAdvHTMLPlugin
                 }
             }
         }
-        
+
         // normalize decimal values to use dots
         $returnValue = str_replace(',', '.', $returnValue);
-        
+
         return (string)$returnValue . $target;
     }
 }
